@@ -1,0 +1,37 @@
+#!/bin/bash
+
+echo "" > nohup.out
+nohup uvicorn fastapi_test:app &
+sleep 2
+echo Server is running!
+
+PID=$(ps aux | grep 'uvicorn fastapi_test:app' | grep -v grep | awk {'print $2'} | xargs)
+echo $PID
+
+#curl http://127.0.0.1:8000/
+
+curl -d '{"name": "cat", "price": 150}' \
+  --request POST http://127.0.0.1:8000/items/400 \
+  -H 'accept: application/json' \
+  -H 'Content-Type: application/json'
+echo ''
+
+curl -d '{"name": "dog", "price": 100}' \
+  --request POST http://127.0.0.1:8000/items/200\
+  -H 'accept: application/json' \
+  -H 'Content-Type: application/json'
+echo ''
+
+curl -d '{"name": "fish", "price": 50}' \
+  --request POST http://127.0.0.1:8000/items/900 \
+  -H 'accept: application/json' \
+  -H 'Content-Type: application/json'
+echo ''
+
+curl --request GET http://127.0.0.1:8000/
+echo ''
+
+kill -9 $PID
+sleep 2
+
+echo Server has been terminated!
