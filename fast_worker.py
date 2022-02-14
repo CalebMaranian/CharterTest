@@ -6,7 +6,7 @@ from fast_rabbit_combo import Item
 
 async def on_message(message: aiormq.abc.DeliveredMessage):
     item = Item.parse_raw(message.body).dict()
-    time.sleep(3)
+    time.sleep(1)
     print(" [x] Received %r" % item)
     time.sleep(message.body.count(b'.'))
     item["qos_type"] = "changed"
@@ -24,7 +24,7 @@ async def on_message(message: aiormq.abc.DeliveredMessage):
 async def main():
     connection = await aiormq.connect(url="amqp://guest:guest@127.0.0.1:5672/")
     channel = await connection.channel()
-    declare_ok = await channel.queue_declare(queue='queue_fast', durable=True)
+    declare_ok = await channel.queue_declare(queue='queue_fast1', durable=True)
 
     await channel.basic_consume(
         queue=declare_ok.queue,

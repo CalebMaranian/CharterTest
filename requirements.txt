@@ -4,3 +4,5 @@ uvicorn
 aredis
 pika
 aiormq
+confluent_kafka
+avro

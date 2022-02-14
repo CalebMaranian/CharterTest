@@ -1,15 +1,14 @@
 """
 This module combines fastapi with redis to create a web server app that integrates both technologies
 """
-
 from typing import Dict, Union
 from fastapi import FastAPI
 from pydantic import BaseModel  # pylint: disable=no-name-in-module
 from aredis import StrictRedis
 import uvicorn
 import aiormq
-import asyncio
-import uuid
+from dataclasses_avroschema import AvroModel
+from dataclasses import dataclass
 
 app = FastAPI()
 client = StrictRedis(host="127.0.0.1", port=6379, db=0)
@@ -42,18 +41,48 @@ class Item(BaseModel):
     """
     Description of Item elements
     """
-    # cm_mac: str
+    type: str
     qos_type: str
     router_ipv6_pd: str
     cpe_ipv4: CPE4
     cpe_ipv6: CPE6
 
+@dataclass
+class CPE4avro(AvroModel):
+    """
+    Description of CPE4 elements
+    """
+    ipv4_address: str
+    port_end: int
+    port_start: int
+    speedboost_trace_id: str
+    action: str
+
+@dataclass
+class CPE6avro(AvroModel):
+    """
+    Description of CPE6 elements
+    arg BaseModel:
+    """
+    ipv6_address: str
+    port_end: int
+    port_start: int
+    speedboost_trace_id: str
+    action: str
+
+@dataclass
+class ItemAvro(AvroModel):
+    """
+    Description of Item elements
+    """
+    qos_type: str
+    router_ipv6_pd: str
+    cpe_ipv4: CPE4avro
+    cpe_ipv6: CPE6avro
+
 async def on_response(message:aiormq.abc.DeliveredMessage):
-    id = message.header.properties.correlation_id
     item = message.body.decode()  #BaseModel.parse_raw(message.body).dict()
-    if futures.get(id) != None:
-        print(f"Message received!\n{item}")
-        futures.pop(id)
+    print(f"Message received!\n{item}")
 
 class Application:
     """
@@ -94,6 +123,7 @@ class Application:
         await client.getset(f"{cm_mac}", item.json())
         return {
             "cm_mac": cm_mac,
+            "type": item.type,
             "qos_type": item.qos_type,
             "router_ipv6_pd": item.router_ipv6_pd,
             "cpe_ipv4": item.cpe_ipv4,
@@ -112,6 +142,7 @@ class Application:
         assert await client.exists(f"{cm_mac}") is True
         return {
             "cm_mac": cm_mac,
+            "type": item.type,
             "qos_type": item.qos_type,
             "router_ipv6_pd": item.router_ipv6_pd,
             "cpe_ipv4": item.cpe_ipv4,
@@ -148,29 +179,21 @@ class Application:
     async def post_to_rabbit(cm_mac: str) -> Dict:
         connection = await aiormq.connect(url="amqp://guest:guest@127.0.0.1:5672/")
         channel = await connection.channel()
-        correlation_id = str(uuid.uuid4())
-
         hold = await client.get(cm_mac)
-        item = Item.parse_raw(hold).dict()
-        futures[correlation_id] = item
-
-        result = await channel.queue_declare(queue='', exclusive=True, auto_delete=True)
-        await channel.basic_consume(queue=result.queue, consumer_callback=on_response)
+        item: Item = Item.parse_raw(hold)
         await channel.basic_publish(
-            body=hold, routing_key='queue_fast1',
-            properties=aiormq.spec.Basic.Properties(
-                content_type='text/plain',
-                correlation_id=correlation_id,
-                reply_to=result.queue,
-            )
+            exchange="",
+            body=item.json().encode("utf-8"),
+            routing_key='queue_kafka1',
         )
 
+        await connection.close()
         return {
             "message":  f'[x] Sent {cm_mac}"',
-            "item": item
+            "item": item.dict()
         }
 
 
 if __name__ == "__main__":
     app = Application()
-    uvicorn.run("fast_rabbit_combo:app", host="127.0.0.1", port=8000, log_level="info")
+    uvicorn.run("fast_rabbit_kafka:app", host="127.0.0.1", port=8000, log_level="info")
