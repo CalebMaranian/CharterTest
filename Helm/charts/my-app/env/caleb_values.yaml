@@ -1,0 +1,10 @@
+deployment:
+  my_app_name: caleb-my-app
+    replicas: 1
+    repository: calebs-repo/my-app
+    tag: 1.0
+    containerPort: 9000
+    secret:
+      name: SECRET_INFO_CALEB
+      secret_name: mysecret
+      secret_key: app-secret
