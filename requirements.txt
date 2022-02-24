@@ -6,3 +6,5 @@ pika
 aiormq
 confluent_kafka
 avro
+dataclasses_avroschema
+dataclasses

@@ -1,0 +1,25 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: app-deployment
+spec:
+  selector:
+    matchLabels:
+      run: my-app
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        run: my-app
+    spec:
+      containers:
+      - name: my-app
+        image: my_app:1.0
+        ports:
+        - containerPort: 8000
+        env:
+          - name: SECRET_INFO
+            valueFrom:
+              secretKeyRef:
+                name: mysecret
+                key: app-secret

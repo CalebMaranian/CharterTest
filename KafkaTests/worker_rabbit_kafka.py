@@ -62,7 +62,7 @@ async def on_message(message: aiormq.abc.DeliveredMessage):
     print(" [x] Done")
 
 async def main():
-    connection = await aiormq.connect(url="amqp://guest:guest@127.0.0.1:5672/")
+    connection = await aiormq.connect(url="amqp://guest:guest@localhost:30012/")
     channel = await connection.channel()
     declare_ok = await channel.queue_declare(queue='queue_kafka1', durable=False)
 

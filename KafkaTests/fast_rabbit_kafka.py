@@ -9,9 +9,14 @@ import uvicorn
 import aiormq
 from dataclasses_avroschema import AvroModel
 from dataclasses import dataclass
+import os
 
+redis_server = os.getenv("APP_SERVICE_PORT_6379_TCP_ADDR", "localhost")
+redis_port = os.getenv("APP_SERVICE_SERVICE_PORT_REDIS_PORT", "6379")
+rabbit_server = os.getenv("APP_SERVICE_PORT_5672_TCP_ADDR", "localhost")
+rabbit_port = os.getenv("APP_SERVICE_PORT_5672_TCP_ADDR", "5672")
 app = FastAPI()
-client = StrictRedis(host="127.0.0.1", port=6379, db=0)
+client = StrictRedis(host=redis_server, port=redis_port, db=0)
 futures = {}
 
 class CPE4(BaseModel):
@@ -112,6 +117,13 @@ class Application:
         }
 
     @staticmethod
+    @app.get("/secrets")
+    async def read_secret():
+        return {
+            "Secret": os.getenv("SECRET_INFO", "No Secret Found")
+        }
+
+    @staticmethod
     @app.put("/items/{item_id}")
     async def update_item(cm_mac: str, item: Item) -> Dict[str, Union[str, CPE4, CPE6]]:
         """
@@ -177,7 +189,7 @@ class Application:
     @staticmethod
     @app.post("/rabbit_test/{item_id}")
     async def post_to_rabbit(cm_mac: str) -> Dict:
-        connection = await aiormq.connect(url="amqp://guest:guest@127.0.0.1:5672/")
+        connection = await aiormq.connect(url=f"amqp://guest:guest@{rabbit_server}:{rabbit_port}/")
         channel = await connection.channel()
         hold = await client.get(cm_mac)
         item: Item = Item.parse_raw(hold)
@@ -196,4 +208,4 @@ class Application:
 
 if __name__ == "__main__":
     app = Application()
-    uvicorn.run("fast_rabbit_kafka:app", host="127.0.0.1", port=8000, log_level="info")
+    uvicorn.run("fast_rabbit_kafka:app", host="0.0.0.0", port=8000, log_level="info")
