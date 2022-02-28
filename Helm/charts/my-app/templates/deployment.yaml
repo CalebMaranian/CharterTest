@@ -1,0 +1,78 @@
+---
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: app-deployment
+spec:
+  selector:
+    matchLabels:
+      run: {{ .Values.deployment.name }}
+  replicas: {{ .Values.deployment.my_app.replicas }}
+  template:
+    metadata:
+      labels:
+        run: {{ .Values.deployment.name }}
+    spec:
+      containers:
+      - name: {{ .Values.deployment.name }}
+        image: {{ .Values.deployment.my_app.containerInfo.image }}:{{ .Values.deployment.my_app.containerInfo.tag }}
+        ports:
+        - containerPort: {{ .Values.deployment.my_app.containerInfo.containerPort }}
+        env:
+          - name: {{ .Values.deployment.my_app.secret.name }}
+            valueFrom:
+              secretKeyRef:
+                name: {{ .Values.deployment.my_app.secret.secret_name }}
+                key: {{ .Values.deployment.my_app.secret.secret_key }}
+
+---
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: rabbit-deployment
+spec:
+  selector:
+    matchLabels:
+      run: {{ .Values.deployment.name }}
+  replicas: {{ .Values.deployment.my_rabbit.replicas }}
+  template:
+    metadata:
+      labels:
+        run: {{ .Values.deployment.name }}
+    spec:
+      containers:
+      - name: {{ .Values.deployment.my_rabbit.containerInfo.containerName }}
+        image: rabbitmq
+        ports:
+        - containerPort: {{ .Values.deployment.my_rabbit.containerInfo.containerPort }}
+
+---
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: redis-deployment
+spec:
+  selector:
+    matchLabels:
+      run: {{ .Values.deployment.name }}
+  replicas: {{ .Values.deployment.my_redis.replicas }}
+  template:
+    metadata:
+      labels:
+        run: {{ .Values.deployment.name }}
+    spec:
+      containers:
+      - name: {{ .Values.deployment.my_redis.containerInfo.containerName }}
+        image: redis
+        ports:
+        - containerPort: {{ .Values.deployment.my_redis.containerInfo.containerPort }}
+        volumeMounts:
+        - name: {{ .Values.deployment.my_redis.containerInfo.volumeMountName }}
+          mountPath: /data
+      volumes:
+      - name: {{ .Values.deployment.my_redis.volumes.volumeName }}
+        persistentVolumeClaim:
+          claimName: {{ .Values.deployment.my_redis.volumes.PVCname }}

@@ -1,0 +1,26 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: app-service
+  labels:
+    run: {{ .Values.deployment.name }}
+spec:
+  type: {{ .Values.service.type }}
+  selector:
+    run: {{ .Values.deployment.name }}
+  ports:
+  - port: {{ .Values.service.portInfo.my_app.port }}
+    name: {{ .Values.service.portInfo.my_app.name }}
+    targetPort: {{ .Values.service.portInfo.my_app.targetPort }}
+    nodePort: {{ .Values.service.portInfo.my_app.nodePort }}
+    protocol: {{ .Values.service.portInfo.my_app.protocol }}
+  - port: {{ .Values.service.portInfo.my_redis.port }}
+    name: {{ .Values.service.portInfo.my_redis.name }}
+    targetPort: {{ .Values.service.portInfo.my_redis.targetPort }}
+    nodePort: {{ .Values.service.portInfo.my_redis.nodePort }}
+    protocol: {{ .Values.service.portInfo.my_redis.protocol }}
+  - port: {{ .Values.service.portInfo.my_rabbit.port }}
+    name: {{ .Values.service.portInfo.my_rabbit.name }}
+    targetPort: {{ .Values.service.portInfo.my_rabbit.targetPort }}
+    nodePort: {{ .Values.service.portInfo.my_rabbit.nodePort }}
+    protocol: {{ .Values.service.portInfo.my_rabbit.protocol }}
