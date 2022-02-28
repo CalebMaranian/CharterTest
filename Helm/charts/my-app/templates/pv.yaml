@@ -1,12 +1,12 @@
 apiVersion: v1
 kind: PersistentVolume
 metadata:
-  name: redis-pv
+  name: {{ .Values.PersistentVolume.name }}
 spec:
-  storageClassName: ""
+  storageClassName: {{ .Values.PersistentVolume.storageClassName }}
   capacity:
-    storage: 1Gi
+    storage: {{ .Values.PersistentVolume.storage }}
   accessModes:
   - ReadWriteOnce
   hostPath:
-    path: "/mnt/data"
+    path: {{ .Values.PersistentVolume.hostPath }}

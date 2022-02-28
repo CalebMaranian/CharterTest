@@ -7,24 +7,24 @@ metadata:
 spec:
   selector:
     matchLabels:
-      run: {{ .Values.deployment.my_app_name }}
-  replicas: {{ .Values.deployment.my_app_name.replicas }}
+      run: {{ .Values.deployment.name }}
+  replicas: {{ .Values.deployment.my_app.replicas }}
   template:
     metadata:
       labels:
-        run: {{ .Values.deployment.my_app_name }}
+        run: {{ .Values.deployment.name }}
     spec:
       containers:
-      - name: {{ .Values.deployment.my_app_name }}
-        image: {{ .Values.deployment.my_app_name.repsitory }}:{{ .Values.deployment.my_app_name.tag }}
+      - name: {{ .Values.deployment.name }}
+        image: {{ .Values.deployment.my_app.containerInfo.image }}:{{ .Values.deployment.my_app.containerInfo.tag }}
         ports:
-        - containerPort: {{ .Values.deployment.my_app_name.containerPort }}
+        - containerPort: {{ .Values.deployment.my_app.containerInfo.containerPort }}
         env:
-          - name: {{ .Values.deployment.my_app_name.secret.name }}
+          - name: {{ .Values.deployment.my_app.secret.name }}
             valueFrom:
               secretKeyRef:
-                name: {{ .Values.deployment.my_app_name.secret.secret_name }}
-                key: {{ .Values.deployment.my_app_name.secret.secret_key }}
+                name: {{ .Values.deployment.my_app.secret.secret_name }}
+                key: {{ .Values.deployment.my_app.secret.secret_key }}
 
 ---
 
@@ -36,17 +36,17 @@ spec:
   selector:
     matchLabels:
       run: {{ .Values.deployment.name }}
-  replicas: 1
+  replicas: {{ .Values.deployment.my_rabbit.replicas }}
   template:
     metadata:
       labels:
         run: {{ .Values.deployment.name }}
     spec:
       containers:
-      - name: rabbitmq0-test
+      - name: {{ .Values.deployment.my_rabbit.containerInfo.containerName }}
         image: rabbitmq
         ports:
-        - containerPort: 5672
+        - containerPort: {{ .Values.deployment.my_rabbit.containerInfo.containerPort }}
 
 ---
 
@@ -58,21 +58,21 @@ spec:
   selector:
     matchLabels:
       run: {{ .Values.deployment.name }}
-  replicas: 1
+  replicas: {{ .Values.deployment.my_redis.replicas }}
   template:
     metadata:
       labels:
         run: {{ .Values.deployment.name }}
     spec:
       containers:
-      - name: redis0-test
+      - name: {{ .Values.deployment.my_redis.containerInfo.containerName }}
         image: redis
         ports:
-        - containerPort: 6379
+        - containerPort: {{ .Values.deployment.my_redis.containerInfo.containerPort }}
         volumeMounts:
-        - name: redis-data
+        - name: {{ .Values.deployment.my_redis.containerInfo.volumeMountName }}
           mountPath: /data
       volumes:
-      - name: redis-data
+      - name: {{ .Values.deployment.my_redis.volumes.volumeName }}
         persistentVolumeClaim:
-          claimName: redisdb-pvc
+          claimName: {{ .Values.deployment.my_redis.volumes.PVCname }}

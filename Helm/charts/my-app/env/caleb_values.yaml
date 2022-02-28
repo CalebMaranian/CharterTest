@@ -1,10 +1,70 @@
 deployment:
-  my_app_name: caleb-my-app
+  name: caleb-my-app
+  my_app:
     replicas: 1
     repository: calebs-repo/my-app
-    tag: 1.0
-    containerPort: 9000
+    containerInfo:
+      image: my_app
+      tag: "1.0"
+      containerName: caleb-app
+      containerPort: 8000
     secret:
       name: SECRET_INFO_CALEB
-      secret_name: mysecret
-      secret_key: app-secret
+      secret_name: caleb-secret
+      secret_key: appSecret
+  my_rabbit:
+    replicas: 1
+    repository: calebs-repo/my-rabbit
+    containerInfo:
+      containerName: caleb-rabbit-test
+      containerPort: 5672
+  my_redis:
+    replicas: 1
+    repository: calebs-repo/my-redis
+    containerInfo:
+      containerName: caleb-redis-test
+      containerPort: 6379
+      volumeMountName: redis-data
+    volumes:
+      volumeName: redis-data
+      PVCname: redisdb-pvc
+
+service:
+  type: NodePort
+  portInfo:
+    my_app:
+      port: 8000
+      name: caleb-app-port
+      targetPort: 8000
+      nodePort: 30008
+      protocol: TCP
+    my_redis:
+      port: 6379
+      name: caleb-redis-port
+      targetPort: 6379
+      nodePort: 30010
+      protocol: TCP
+    my_rabbit:
+      port: 5672
+      name: rabbit-port
+      targetPort: 5672
+      nodePort: 30012
+      protocol: TCP
+
+secrets:
+  name: caleb-secret
+  type: Opaque
+  stringData:
+    appSecret: IDontKnowWhatImDoing
+
+PersistentVolume:
+  name: redis-pv
+  storageClassName: ""
+  storage: 1Gi
+  hostPath: "/mnt/data"
+
+PersistentVolumeClaim:
+  name: redisdb-pvc
+  storageClassName: ""
+  storage: 1Gi
+  hostPath: "/mnt/data"
