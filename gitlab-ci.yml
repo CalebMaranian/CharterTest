@@ -1,0 +1,10 @@
+image: artifactory.charterlab.com/naas-eagles-docker-local/artifactory-pkg-base:latest
+
+stages:
+  - build
+
+compile-packages:
+  stage: build
+  script:
+    - echo "Building..."
+    - make build
